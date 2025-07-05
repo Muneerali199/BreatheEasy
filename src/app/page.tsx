@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -68,16 +69,24 @@ export default function DashboardPage() {
     setForecast(null);
 
     const parts = data.location.split(',').map(p => p.trim());
-    if (parts.length < 2) {
+    
+    let city: string, state: string, country: string;
+
+    if (parts.length === 3) {
+      // Assumes "City, State, Country" format
+      city = parts[0];
+      state = parts[1];
+      country = parts[2];
+    } else if (parts.length === 2) {
+      // Assumes "City, Country", so state is same as city for API
+      city = parts[0];
+      state = parts[0];
+      country = parts[1];
+    } else {
       setError("Invalid location format. Please select a valid location from the list.");
       setIsLoading(false);
       return;
     }
-
-    // Heuristic to parse: New York, NY, USA -> 3 parts. London, UK -> 2 parts.
-    const city = parts[0];
-    const country = parts[parts.length - 1];
-    const state = parts.length > 2 ? parts[1] : city; // If no state, use city.
 
     try {
       const result = await forecastAirQuality({ city, state, country });

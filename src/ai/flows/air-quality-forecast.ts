@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -70,9 +71,18 @@ const getGroundSensorData = ai.defineTool(
       
       if (data.status !== 'success') {
         const message = data.data?.message || 'an unknown error occurred';
-        // Make the error message user-friendly
-        if (message === 'city_not_found' || message === 'no_nearest_station' || message === 'too_many_requests' ) {
-          throw new Error(`We couldn't find data for "${city}". Please check the location and try again.`);
+        // Make the error message user-friendly and specific.
+        if (message === 'city_not_found') {
+          throw new Error(`The location "${city}, ${state}" could not be found by the data provider. Please check the spelling or try a nearby city.`);
+        }
+        if (message === 'no_nearest_station') {
+            throw new Error(`No air quality monitoring station could be found for "${city}".`);
+        }
+        if (message === 'too_many_requests' || message === 'call_limit_reached') {
+            throw new Error('The request limit for the air quality data service has been reached. Please try again later.');
+        }
+        if (message === 'api_key_expired' || message === 'invalid_api_key') {
+            throw new Error('The API key for the data service is invalid or has expired. Please contact support.');
         }
         throw new Error(`Data service error: ${message}.`);
       }
@@ -81,7 +91,7 @@ const getGroundSensorData = ai.defineTool(
       // The API sometimes returns the nearest city if the requested one isn't found.
       const returnedCity = data.data.city;
       if (returnedCity.toLowerCase() !== city.toLowerCase()) {
-        throw new Error(`We couldn't find data for "${city}". Displaying data for the nearest city, "${returnedCity}", is not supported.`);
+        throw new Error(`Data for "${city}" is not available. The closest available data is for "${returnedCity}", but this is not supported.`);
       }
 
       const pollution = data.data.current.pollution;
