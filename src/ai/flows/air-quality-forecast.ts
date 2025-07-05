@@ -69,12 +69,19 @@ const getGroundSensorData = ai.defineTool(
       if (data.status !== 'success') {
         const message = data.data?.message || 'an unknown error occurred';
         // Make the error message user-friendly
-        if (message === 'city_not_found') {
+        if (message === 'city_not_found' || message === 'no_nearest_station') {
           throw new Error(`We couldn't find data for "${city}". Please check the location and try again.`);
         }
         throw new Error(`Data service error: ${message}.`);
       }
       
+      // NEW: Validate that the data returned is for the requested city.
+      // The API sometimes returns the nearest city if the requested one isn't found.
+      const returnedCity = data.data.city;
+      if (returnedCity.toLowerCase() !== city.toLowerCase()) {
+        throw new Error(`We couldn't find data for "${city}". Please check the location and try again.`);
+      }
+
       const pollution = data.data.current.pollution;
       // The free API provides main pollutant and AQI. We'll use aqius for pm2.5.
       // And generate mock data for others as they are not directly available.
