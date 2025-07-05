@@ -93,7 +93,7 @@ export default function HistoricalDataPage() {
 
       <Card className="shadow-lg rounded-xl">
         <CardHeader>
-          <CardTitle className="font-headline">Select Location and Date Range</CardTitle>
+          <CardTitle>Select Location and Date Range</CardTitle>
           <CardDescription>Enter details to retrieve historical air quality data and analysis.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -206,7 +206,7 @@ export default function HistoricalDataPage() {
       {error && (
         <Card className="border-destructive bg-destructive/10 rounded-xl">
           <CardHeader>
-            <CardTitle className="text-destructive font-headline">An Error Occurred</CardTitle>
+            <CardTitle className="text-destructive">An Error Occurred</CardTitle>
           </CardHeader>
           <CardContent>
             <p>{error}</p>
@@ -217,7 +217,7 @@ export default function HistoricalDataPage() {
       {result && (
         <Card className="shadow-lg rounded-xl">
           <CardHeader>
-            <CardTitle className="font-headline">Historical Analysis</CardTitle>
+            <CardTitle>Historical Analysis</CardTitle>
             <CardDescription>
               Showing data for {form.getValues('city')} from {result.chartData[0].date} to {result.chartData[result.chartData.length - 1].date}.
             </CardDescription>

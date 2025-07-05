@@ -52,7 +52,7 @@ export default function NotificationsPage() {
 
       <Card className="shadow-lg rounded-xl">
         <CardHeader>
-          <CardTitle className="font-headline">Personalize Your Alerts</CardTitle>
+          <CardTitle>Personalize Your Alerts</CardTitle>
           <CardDescription>Enter your location and any health risk factors to receive a tailored notification plan.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -105,7 +105,7 @@ export default function NotificationsPage() {
       {error && (
         <Card className="border-destructive bg-destructive/10 rounded-xl">
           <CardHeader>
-            <CardTitle className="text-destructive font-headline">An Error Occurred</CardTitle>
+            <CardTitle className="text-destructive">An Error Occurred</CardTitle>
           </CardHeader>
           <CardContent>
             <p>{error}</p>
@@ -116,7 +116,7 @@ export default function NotificationsPage() {
       {strategy && (
         <Card className="shadow-lg rounded-xl">
           <CardHeader>
-            <CardTitle className="font-headline">Your Custom Notification Strategy</CardTitle>
+            <CardTitle>Your Custom Notification Strategy</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="prose prose-sm dark:prose-invert max-w-none text-foreground/80 whitespace-pre-wrap">{strategy.strategy}</div>

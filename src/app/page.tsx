@@ -122,7 +122,7 @@ export default function DashboardPage() {
       
       <Card className="shadow-lg rounded-xl">
         <CardHeader>
-          <CardTitle className="font-headline">Location Forecast</CardTitle>
+          <CardTitle>Location Forecast</CardTitle>
           <CardDescription>Enter a location to get its air quality forecast.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -206,7 +206,7 @@ export default function DashboardPage() {
       {error && (
         <Card className="border-destructive bg-destructive/10 rounded-xl">
           <CardHeader>
-            <CardTitle className="text-destructive font-headline">An Error Occurred</CardTitle>
+            <CardTitle className="text-destructive">An Error Occurred</CardTitle>
           </CardHeader>
           <CardContent>
             <p>{error}</p>
@@ -219,7 +219,7 @@ export default function DashboardPage() {
           <CardHeader>
             <div className="flex justify-between items-start">
               <div>
-                <CardTitle className="font-headline">Forecast for {form.getValues('location')}</CardTitle>
+                <CardTitle>Forecast for {form.getValues('location')}</CardTitle>
                 <CardDescription>
                   Current AQI: <span className="font-bold">{forecast.currentAqi}</span> ({aqiLevel})
                 </CardDescription>
