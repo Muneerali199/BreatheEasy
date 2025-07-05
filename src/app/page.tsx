@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { forecastAirQuality } from '@/ai/flows/air-quality-forecast';
 import { Loader2 } from 'lucide-react';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
@@ -22,7 +22,9 @@ import { useForecast } from '@/context/ForecastContext';
 
 
 const formSchema = z.object({
-  location: z.string().min(2, "Location must be at least 2 characters."),
+  city: z.string().min(2, "City must be at least 2 characters."),
+  state: z.string().min(2, "State must be at least 2 characters."),
+  country: z.string().min(2, "Country must be at least 2 characters."),
 });
 type FormValues = z.infer<typeof formSchema>;
 
@@ -49,7 +51,7 @@ export default function DashboardPage() {
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: { location: "" },
+    defaultValues: { city: "", state: "", country: "" },
   });
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
@@ -87,23 +89,52 @@ export default function DashboardPage() {
       <Card className="shadow-lg rounded-xl">
         <CardHeader>
           <CardTitle className="font-headline">Location Forecast</CardTitle>
-          <CardDescription>Enter a city to get its air quality forecast.</CardDescription>
+          <CardDescription>Enter a city, state, and country to get its air quality forecast.</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="flex items-start gap-4">
-              <FormField
-                control={form.control}
-                name="location"
-                render={({ field }) => (
-                  <FormItem className="flex-grow">
-                    <FormControl>
-                      <Input placeholder="e.g., San Francisco, CA" {...field} className="text-base" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <FormField
+                  control={form.control}
+                  name="city"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>City</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., San Francisco" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="state"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>State</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., CA" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="country"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Country</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., USA" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
               <Button type="submit" disabled={isLoading} size="lg">
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Get Forecast
@@ -135,7 +166,7 @@ export default function DashboardPage() {
           <CardHeader>
             <div className="flex justify-between items-start">
               <div>
-                <CardTitle className="font-headline">Forecast for {form.getValues('location')}</CardTitle>
+                <CardTitle className="font-headline">Forecast for {`${form.getValues('city')}, ${form.getValues('state')}`}</CardTitle>
                 <CardDescription>
                   Current AQI: <span className="font-bold">{forecast.currentAqi}</span> ({aqiLevel})
                 </CardDescription>
@@ -206,18 +237,18 @@ export default function DashboardPage() {
                 <div>
                     <h3 className="text-lg font-semibold mb-2">Health Recommendations</h3>
                     <Accordion type="single" collapsible className="w-full" defaultValue="general">
-                        <AccordionItem value="general">
-                            <AccordionTrigger>For the General Public</AccordionTrigger>
-                            <AccordionContent>
-                                {forecast.healthRecommendations.generalPublic}
-                            </AccordionContent>
-                        </AccordionItem>
-                        <AccordionItem value="sensitive">
-                            <AccordionTrigger>For Sensitive Groups</AccordionTrigger>
-                            <AccordionContent>
-                                {forecast.healthRecommendations.sensitiveGroups}
-                            </AccordionContent>
-                        </AccordionItem>
+                      <AccordionItem value="general">
+                        <AccordionTrigger>For the General Public</AccordionTrigger>
+                        <AccordionContent>
+                          {forecast.healthRecommendations.generalPublic}
+                        </AccordionContent>
+                      </AccordionItem>
+                      <AccordionItem value="sensitive">
+                        <AccordionTrigger>For Sensitive Groups</AccordionTrigger>
+                        <AccordionContent>
+                          {forecast.healthRecommendations.sensitiveGroups}
+                        </AccordionContent>
+                      </AccordionItem>
                     </Accordion>
                 </div>
             )}
