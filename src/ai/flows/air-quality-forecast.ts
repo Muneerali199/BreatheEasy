@@ -69,17 +69,17 @@ const getGroundSensorData = ai.defineTool(
       if (data.status !== 'success') {
         const message = data.data?.message || 'an unknown error occurred';
         // Make the error message user-friendly
-        if (message === 'city_not_found' || message === 'no_nearest_station') {
+        if (message === 'city_not_found' || message === 'no_nearest_station' || message === 'too_many_requests' ) {
           throw new Error(`We couldn't find data for "${city}". Please check the location and try again.`);
         }
         throw new Error(`Data service error: ${message}.`);
       }
       
-      // NEW: Validate that the data returned is for the requested city.
+      // Validate that the data returned is for the requested city.
       // The API sometimes returns the nearest city if the requested one isn't found.
       const returnedCity = data.data.city;
       if (returnedCity.toLowerCase() !== city.toLowerCase()) {
-        throw new Error(`We couldn't find data for "${city}". Please check the location and try again.`);
+        throw new Error(`We couldn't find data for "${city}". Displaying data for the nearest city, "${returnedCity}", is not supported.`);
       }
 
       const pollution = data.data.current.pollution;
@@ -171,6 +171,8 @@ To do this, you MUST first use the available tools to gather data:
 2.  Call 'getSatelliteData' with just the city name to get satellite-based observations.
 3.  Call 'getWeatherModelData' with just the city name to get the weather forecast, as wind and rain significantly impact air quality.
 
+If the 'getGroundSensorData' tool fails, you MUST STOP and report the error. Do not proceed with the forecast.
+
 Once you have the data from all three tools, synthesize it to create your forecast.
 
 The forecast must include:
@@ -191,16 +193,10 @@ const forecastAirQualityFlow = ai.defineFlow(
     outputSchema: ForecastAirQualityOutputSchema,
   },
   async (input) => {
-    // We need to pass a single string to the mock tools
-    const locationString = `${input.city}, ${input.state}`;
-    
-    const {output} = await forecastAirQualityPrompt({
-      ...input,
-      // Provide the tools with the inputs they expect
-      getGroundSensorData: input,
-      getSatelliteData: { location: locationString },
-      getWeatherModelData: { location: locationString },
-    });
+    // The prompt is configured with the necessary tools.
+    // The model will call them automatically based on the prompt instructions.
+    // If a tool call fails, the entire prompt will throw an error, which will be caught by the client.
+    const {output} = await forecastAirQualityPrompt(input);
     return output!;
   }
 );
