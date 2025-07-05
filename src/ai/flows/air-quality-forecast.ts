@@ -25,7 +25,7 @@ const getSatelliteData = ai.defineTool(
   async ({ location }) => {
     console.log(`[Tool] Fetching satellite data for ${location}`);
     // In a real app, this would call a remote API.
-    // Here, we generate mock data based on the location string length for variability.
+    // Here, we generate mock data based on the location string for variability.
     const seed = location.length;
     return {
       aerosolOpticalDepth: (seed % 10) / 10,
@@ -33,6 +33,12 @@ const getSatelliteData = ai.defineTool(
     };
   }
 );
+
+const GroundSensorDataSchema = z.object({
+  pm25: z.number().describe('Particulate Matter 2.5 concentration based on US AQI.'),
+  o3: z.number().describe('Ozone concentration in ppb.'),
+  no2: z.number().describe('Nitrogen Dioxide concentration in ppb.'),
+});
 
 // Real Tool: Fetches ground sensor data from IQAir API
 const getGroundSensorData = ai.defineTool(
@@ -44,11 +50,7 @@ const getGroundSensorData = ai.defineTool(
         state: z.string(),
         country: z.string(),
     }),
-    outputSchema: z.object({
-      pm25: z.number().describe('Particulate Matter 2.5 concentration based on US AQI.'),
-      o3: z.number().describe('Ozone concentration in ppb.'),
-      no2: z.number().describe('Nitrogen Dioxide concentration in ppb.'),
-    }),
+    outputSchema: GroundSensorDataSchema,
   },
   async ({ city, state, country }) => {
     console.log(`[Tool] Fetching ground sensor data for ${city}, ${state}, ${country}`);
@@ -137,6 +139,11 @@ const ForecastAirQualityInputSchema = z.object({
 });
 export type ForecastAirQualityInput = z.infer<typeof ForecastAirQualityInputSchema>;
 
+const ForecastAirQualityPromptInputSchema = ForecastAirQualityInputSchema.extend({
+  groundData: GroundSensorDataSchema,
+});
+
+
 const PollutantSchema = z.object({
     name: z.string().describe('Name of the pollutant (e.g., PM2.5, O3, NO2).'),
     aqi: z.number().describe('The AQI value for this specific pollutant.'),
@@ -161,19 +168,21 @@ export async function forecastAirQuality(input: ForecastAirQualityInput): Promis
 
 const forecastAirQualityPrompt = ai.definePrompt({
   name: 'forecastAirQualityPrompt',
-  input: {schema: ForecastAirQualityInputSchema},
+  input: {schema: ForecastAirQualityPromptInputSchema},
   output: {schema: ForecastAirQualityOutputSchema},
-  tools: [getSatelliteData, getGroundSensorData, getWeatherModelData],
-  prompt: `You are an expert meteorologist and air quality scientist. Your task is to generate a comprehensive air quality forecast for a given location.
+  tools: [getSatelliteData, getWeatherModelData],
+  prompt: `You are an expert meteorologist and air quality scientist. Your task is to generate a comprehensive air quality forecast for a given location using pre-fetched ground sensor data and other available tools.
 
-To do this, you MUST first use the available tools to gather data:
-1.  Call 'getGroundSensorData' with the provided city, state, and country to get real-time measurements from local sensors.
-2.  Call 'getSatelliteData' with just the city name to get satellite-based observations.
-3.  Call 'getWeatherModelData' with just the city name to get the weather forecast, as wind and rain significantly impact air quality.
+You have been provided with the following real-time ground sensor data:
+- PM2.5: {{{groundData.pm25}}} AQI
+- O3: {{{groundData.o3}}} ppb
+- NO2: {{{groundData.no2}}} ppb
 
-If the 'getGroundSensorData' tool fails, you MUST STOP and report the error. Do not proceed with the forecast.
+Now, you MUST use the other available tools to gather supplemental data:
+1.  Call 'getSatelliteData' with just the city name to get satellite-based observations.
+2.  Call 'getWeatherModelData' with just the city name to get the weather forecast.
 
-Once you have the data from all three tools, synthesize it to create your forecast.
+Once you have the data from all sources (the provided ground data and the data from the tools), synthesize it to create your forecast.
 
 The forecast must include:
 - A detailed 1-day summary forecast that explains how the weather (wind, rain) will affect air quality.
@@ -193,10 +202,20 @@ const forecastAirQualityFlow = ai.defineFlow(
     outputSchema: ForecastAirQualityOutputSchema,
   },
   async (input) => {
-    // The prompt is configured with the necessary tools.
-    // The model will call them automatically based on the prompt instructions.
-    // If a tool call fails, the entire prompt will throw an error, which will be caught by the client.
-    const {output} = await forecastAirQualityPrompt(input);
+    // Step 1: Manually call the critical real-world data tool. This acts as a gatekeeper.
+    const groundData = await getGroundSensorData({
+        city: input.city,
+        state: input.state,
+        country: input.country,
+    });
+    // If getGroundSensorData throws an error, the flow stops here and the error propagates to the client.
+
+    // Step 2: If the real data is valid, proceed to call the AI prompt with it.
+    const {output} = await forecastAirQualityPrompt({
+        ...input,
+        groundData,
+    });
+    
     return output!;
   }
 );
