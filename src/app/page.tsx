@@ -23,6 +23,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { getSupportedLocations } from './actions';
 import { cn } from '@/lib/utils';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 
 const formSchema = z.object({
@@ -227,85 +228,92 @@ export default function DashboardPage() {
               {AqiIcon && <AqiIcon className="h-12 w-12" />}
             </div>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Overall Forecast</h3>
-              <p className="text-foreground/80">{forecast.forecast}</p>
-            </div>
-
-            {forecast.pollutants && forecast.pollutants.length > 0 && (
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Pollutant Breakdown</h3>
-                <Card>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Pollutant</TableHead>
-                        <TableHead className="text-center">AQI</TableHead>
-                        <TableHead>Recommendation</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {forecast.pollutants.map((pollutant) => (
-                        <TableRow key={pollutant.name}>
-                          <TableCell className="font-medium">{pollutant.name}</TableCell>
-                          <TableCell className="text-center">
-                            <Badge variant={getPollutantBadgeVariant(pollutant.aqi)}>
-                              {pollutant.aqi}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>{pollutant.recommendation}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </Card>
-              </div>
-            )}
-
-            <div>
-              <h3 className="text-lg font-semibold mb-2">30-Day AQI Trend</h3>
-              <ChartContainer config={chartConfig} className="h-[150px] w-full">
-                <AreaChart data={chartData} margin={{ left: 0, right: 0, top: 0, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="fillValue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="var(--color-value)" stopOpacity={0.8} />
-                      <stop offset="95%" stopColor="var(--color-value)" stopOpacity={0.1} />
-                    </linearGradient>
-                  </defs>
-                  <Area
-                    dataKey="value"
-                    type="natural"
-                    fill="url(#fillValue)"
-                    stroke="var(--color-value)"
-                    strokeWidth={2}
-                    stackId="a"
-                  />
-                  <ChartTooltip content={<ChartTooltipContent indicator="line" />} cursor={false} />
-                </AreaChart>
-              </ChartContainer>
-            </div>
-            
-            {forecast.healthRecommendations && (
+          <CardContent>
+            <Tabs defaultValue="overview" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="pollutants">Pollutants</TabsTrigger>
+                <TabsTrigger value="health">Health Advice</TabsTrigger>
+              </TabsList>
+              <TabsContent value="overview" className="mt-4 space-y-6">
                 <div>
-                    <h3 className="text-lg font-semibold mb-2">Health Recommendations</h3>
-                    <Accordion type="single" collapsible className="w-full" defaultValue="general">
-                      <AccordionItem value="general">
-                        <AccordionTrigger>For the General Public</AccordionTrigger>
-                        <AccordionContent>
-                          {forecast.healthRecommendations.generalPublic}
-                        </AccordionContent>
-                      </AccordionItem>
-                      <AccordionItem value="sensitive">
-                        <AccordionTrigger>For Sensitive Groups</AccordionTrigger>
-                        <AccordionContent>
-                          {forecast.healthRecommendations.sensitiveGroups}
-                        </AccordionContent>
-                      </AccordionItem>
-                    </Accordion>
+                  <h3 className="text-lg font-semibold mb-2">Overall Forecast</h3>
+                  <p className="text-foreground/80">{forecast.forecast}</p>
                 </div>
-            )}
-            
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">30-Day AQI Trend</h3>
+                  <ChartContainer config={chartConfig} className="h-[150px] w-full">
+                    <AreaChart data={chartData} margin={{ left: 0, right: 0, top: 0, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="fillValue" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="var(--color-value)" stopOpacity={0.8} />
+                          <stop offset="95%" stopColor="var(--color-value)" stopOpacity={0.1} />
+                        </linearGradient>
+                      </defs>
+                      <Area
+                        dataKey="value"
+                        type="natural"
+                        fill="url(#fillValue)"
+                        stroke="var(--color-value)"
+                        strokeWidth={2}
+                        stackId="a"
+                      />
+                      <ChartTooltip content={<ChartTooltipContent indicator="line" />} cursor={false} />
+                    </AreaChart>
+                  </ChartContainer>
+                </div>
+              </TabsContent>
+              <TabsContent value="pollutants" className="mt-4">
+                {forecast.pollutants && forecast.pollutants.length > 0 && (
+                  <div>
+                    <Card>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Pollutant</TableHead>
+                            <TableHead className="text-center">AQI</TableHead>
+                            <TableHead>Recommendation</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {forecast.pollutants.map((pollutant) => (
+                            <TableRow key={pollutant.name}>
+                              <TableCell className="font-medium">{pollutant.name}</TableCell>
+                              <TableCell className="text-center">
+                                <Badge variant={getPollutantBadgeVariant(pollutant.aqi)}>
+                                  {pollutant.aqi}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>{pollutant.recommendation}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </Card>
+                  </div>
+                )}
+              </TabsContent>
+              <TabsContent value="health" className="mt-4">
+                {forecast.healthRecommendations && (
+                    <div>
+                        <Accordion type="single" collapsible className="w-full" defaultValue="general">
+                          <AccordionItem value="general">
+                            <AccordionTrigger>For the General Public</AccordionTrigger>
+                            <AccordionContent>
+                              {forecast.healthRecommendations.generalPublic}
+                            </AccordionContent>
+                          </AccordionItem>
+                          <AccordionItem value="sensitive">
+                            <AccordionTrigger>For Sensitive Groups</AccordionTrigger>
+                            <AccordionContent>
+                              {forecast.healthRecommendations.sensitiveGroups}
+                            </AccordionContent>
+                          </AccordionItem>
+                        </Accordion>
+                    </div>
+                )}
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
       )}
@@ -313,7 +321,7 @@ export default function DashboardPage() {
       <div className="pt-8">
           <h2 className="text-2xl font-bold tracking-tight mb-4 font-headline">Air Quality Levels Guide</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="rounded-xl">
+              <Card className="rounded-xl transition-transform duration-200 hover:scale-105">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">Good</CardTitle>
                       <GoodAirIcon className="h-8 w-8" />
@@ -323,7 +331,7 @@ export default function DashboardPage() {
                       <p className="text-xs text-muted-foreground">Air quality is satisfactory.</p>
                   </CardContent>
               </Card>
-              <Card className="rounded-xl">
+              <Card className="rounded-xl transition-transform duration-200 hover:scale-105">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">Moderate</CardTitle>
                       <ModerateAirIcon className="h-8 w-8" />
@@ -333,7 +341,7 @@ export default function DashboardPage() {
                       <p className="text-xs text-muted-foreground">Some pollutants may be a concern.</p>
                   </CardContent>
               </Card>
-              <Card className="rounded-xl">
+              <Card className="rounded-xl transition-transform duration-200 hover:scale-105">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">Unhealthy</CardTitle>
                       <PoorAirIcon className="h-8 w-8" />
