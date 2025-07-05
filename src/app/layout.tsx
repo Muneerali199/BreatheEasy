@@ -5,6 +5,7 @@ import { Toaster } from '@/components/ui/toaster';
 import Header from '@/components/layout/header';
 import Globe from '@/components/globe/globe';
 import { ForecastProvider } from '@/context/ForecastContext';
+import { ThemeProvider } from '@/components/theme-provider';
 
 export const metadata: Metadata = {
   title: 'BreatheEasy',
@@ -33,22 +34,29 @@ export default function RootLayout({
       <body
         className={cn('min-h-screen bg-background font-body antialiased')}
       >
-        <ForecastProvider>
-          <div className="relative flex min-h-screen flex-col">
-            <Header />
-            <div className="flex-1">
-              <div className="flex h-[calc(100vh-4rem)]">
-                <main className="flex-1 overflow-y-auto p-6 lg:p-8">
-                  {children}
-                </main>
-                <aside className="hidden lg:flex w-[35%] xl:w-[40%] items-center justify-center border-l border-border bg-muted/20">
-                  <Globe />
-                </aside>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <ForecastProvider>
+            <div className="relative flex min-h-screen flex-col">
+              <Header />
+              <div className="flex-1">
+                <div className="flex h-[calc(100vh-4rem)]">
+                  <main className="flex-1 overflow-y-auto p-6 lg:p-8">
+                    {children}
+                  </main>
+                  <aside className="hidden lg:flex w-[35%] xl:w-[40%] items-center justify-center border-l border-border bg-muted/20">
+                    <Globe />
+                  </aside>
+                </div>
               </div>
             </div>
-          </div>
-          <Toaster />
-        </ForecastProvider>
+            <Toaster />
+          </ForecastProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
