@@ -22,6 +22,12 @@ export default function Header() {
           >
             Notifications
           </Link>
+          <Link
+            href="/historical"
+            className="transition-colors hover:text-foreground/80 text-foreground/60"
+          >
+            Historical Data
+          </Link>
         </nav>
       </div>
     </header>
