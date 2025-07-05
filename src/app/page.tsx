@@ -62,7 +62,11 @@ export default function DashboardPage() {
       const result = await forecastAirQuality(data);
       setForecast(result);
     } catch (e) {
-      setError("Failed to get forecast. Please try again.");
+      if (e instanceof Error) {
+        setError(e.message);
+      } else {
+        setError("An unknown error occurred while fetching the forecast.");
+      }
       console.error(e);
     } finally {
       setIsLoading(false);

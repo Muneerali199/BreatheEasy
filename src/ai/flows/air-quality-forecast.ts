@@ -55,28 +55,24 @@ const getGroundSensorData = ai.defineTool(
     const apiKey = process.env.IQAIR_API_KEY;
 
     if (!apiKey) {
-      console.error("IQAir API key is not set in .env file. Returning mock data.");
-      const seed = city.length;
-      return {
-        pm25: (seed * 2.5) % 150,
-        o3: (seed * 1.5) % 80,
-        no2: (seed * 0.8) % 50,
-      };
+      console.error("IQAir API key is not set in .env file.");
+      // The API key is a server configuration issue, so we throw a generic error to the user.
+      throw new Error("Could not connect to the data service. Please contact support.");
     }
 
     const url = `https://api.airvisual.com/v2/city?city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}&country=${encodeURIComponent(country)}&key=${apiKey}`;
 
     try {
       const response = await fetch(url);
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error(`IQAir API call failed with status: ${response.status}`, errorData);
-        throw new Error(`API call failed with status: ${response.status}`);
-      }
       const data = await response.json();
       
       if (data.status !== 'success') {
-        throw new Error(`API returned an error: ${data.data.message}`);
+        const message = data.data?.message || 'an unknown error occurred';
+        // Make the error message user-friendly
+        if (message === 'city_not_found') {
+          throw new Error(`We couldn't find data for "${city}". Please check the location and try again.`);
+        }
+        throw new Error(`Data service error: ${message}.`);
       }
       
       const pollution = data.data.current.pollution;
@@ -88,14 +84,14 @@ const getGroundSensorData = ai.defineTool(
         no2: Math.floor(Math.random() * 50), // Mock data as it is not in the free tier
       };
     } catch (error) {
-      console.error("Error fetching from IQAir API:", error);
-      // Fallback to mock data on error
-      const seed = city.length;
-      return {
-          pm25: (seed * 2.5) % 150,
-          o3: (seed * 1.5) % 80,
-          no2: (seed * 0.8) % 50,
-      };
+      // This will catch network errors or if `response.json()` fails.
+      console.error("Error fetching or parsing from IQAir API:", error);
+      // Re-throw the original user-friendly error if we created one.
+      if (error instanceof Error) {
+        throw error;
+      }
+      // Or throw a generic network error.
+      throw new Error("Failed to connect to the air quality data service. Please check your network connection.");
     }
   }
 );
