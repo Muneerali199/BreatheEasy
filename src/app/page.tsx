@@ -15,6 +15,9 @@ import { Area, AreaChart } from "recharts"
 import GoodAirIcon from '@/components/icons/GoodAirIcon';
 import ModerateAirIcon from '@/components/icons/ModerateAirIcon';
 import PoorAirIcon from '@/components/icons/PoorAirIcon';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+
 
 const formSchema = z.object({
   location: z.string().min(2, "Location must be at least 2 characters."),
@@ -30,6 +33,12 @@ const getAqiInfo = (aqi: number | undefined) => {
         return { level: 'Moderate', Icon: ModerateAirIcon };
     }
     return { level: 'Unhealthy', Icon: PoorAirIcon };
+};
+
+const getPollutantBadgeVariant = (aqi: number): "good" | "moderate" | "destructive" => {
+    if (aqi <= 50) return "good";
+    if (aqi <= 100) return "moderate";
+    return "destructive";
 };
 
 export default function DashboardPage() {
@@ -135,9 +144,40 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent className="space-y-6">
             <div>
-              <h3 className="text-lg font-semibold mb-2">Details</h3>
+              <h3 className="text-lg font-semibold mb-2">Overall Forecast</h3>
               <p className="text-foreground/80">{forecast.forecast}</p>
             </div>
+
+            {forecast.pollutants && forecast.pollutants.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Pollutant Breakdown</h3>
+                <Card>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Pollutant</TableHead>
+                        <TableHead className="text-center">AQI</TableHead>
+                        <TableHead>Recommendation</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {forecast.pollutants.map((pollutant) => (
+                        <TableRow key={pollutant.name}>
+                          <TableCell className="font-medium">{pollutant.name}</TableCell>
+                          <TableCell className="text-center">
+                            <Badge variant={getPollutantBadgeVariant(pollutant.aqi)}>
+                              {pollutant.aqi}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{pollutant.recommendation}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </Card>
+              </div>
+            )}
+
             <div>
               <h3 className="text-lg font-semibold mb-2">30-Day AQI Trend</h3>
               <ChartContainer config={chartConfig} className="h-[150px] w-full">
