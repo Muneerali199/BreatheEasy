@@ -21,6 +21,17 @@ const formSchema = z.object({
 });
 type FormValues = z.infer<typeof formSchema>;
 
+const getAqiInfo = (aqi: number | undefined) => {
+    if (aqi === undefined) return { level: null, Icon: null };
+    if (aqi <= 50) {
+        return { level: 'Good', Icon: GoodAirIcon };
+    }
+    if (aqi <= 100) {
+        return { level: 'Moderate', Icon: ModerateAirIcon };
+    }
+    return { level: 'Unhealthy', Icon: PoorAirIcon };
+};
+
 export default function DashboardPage() {
   const [forecast, setForecast] = useState<ForecastAirQualityOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -53,6 +64,8 @@ export default function DashboardPage() {
       color: "hsl(var(--primary))",
     },
   };
+  
+  const { level: aqiLevel, Icon: AqiIcon } = getAqiInfo(forecast?.currentAqi);
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
@@ -108,20 +121,25 @@ export default function DashboardPage() {
       )}
 
       {forecast && (
-        <div className="grid gap-8 md:grid-cols-2">
-          <Card className="shadow-lg rounded-xl">
-            <CardHeader>
-              <CardTitle className="font-headline">Forecast Details</CardTitle>
-            </CardHeader>
-            <CardContent>
+        <Card className="shadow-lg rounded-xl">
+          <CardHeader>
+            <div className="flex justify-between items-start">
+              <div>
+                <CardTitle className="font-headline">Forecast for {form.getValues('location')}</CardTitle>
+                <CardDescription>
+                  Current AQI: <span className="font-bold">{forecast.currentAqi}</span> ({aqiLevel})
+                </CardDescription>
+              </div>
+              {AqiIcon && <AqiIcon className="h-12 w-12" />}
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Details</h3>
               <p className="text-foreground/80">{forecast.forecast}</p>
-            </CardContent>
-          </Card>
-          <Card className="shadow-lg rounded-xl">
-            <CardHeader>
-              <CardTitle className="font-headline">30-Day AQI Trend</CardTitle>
-            </CardHeader>
-            <CardContent>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold mb-2">30-Day AQI Trend</h3>
               <ChartContainer config={chartConfig} className="h-[150px] w-full">
                 <AreaChart data={chartData} margin={{ left: 0, right: 0, top: 0, bottom: 0 }}>
                   <defs>
@@ -141,18 +159,18 @@ export default function DashboardPage() {
                   <ChartTooltip content={<ChartTooltipContent indicator="line" />} cursor={false} />
                 </AreaChart>
               </ChartContainer>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       <div className="pt-8">
-          <h2 className="text-2xl font-bold tracking-tight mb-4 font-headline">Air Quality Levels</h2>
+          <h2 className="text-2xl font-bold tracking-tight mb-4 font-headline">Air Quality Levels Guide</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Card className="rounded-xl">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">Good</CardTitle>
-                      <GoodAirIcon className="h-8 w-8 text-green-500" />
+                      <GoodAirIcon className="h-8 w-8" />
                   </CardHeader>
                   <CardContent>
                       <div className="text-2xl font-bold">0-50</div>
@@ -162,7 +180,7 @@ export default function DashboardPage() {
               <Card className="rounded-xl">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">Moderate</CardTitle>
-                      <ModerateAirIcon className="h-8 w-8 text-yellow-500" />
+                      <ModerateAirIcon className="h-8 w-8" />
                   </CardHeader>
                   <CardContent>
                       <div className="text-2xl font-bold">51-100</div>
@@ -172,7 +190,7 @@ export default function DashboardPage() {
               <Card className="rounded-xl">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">Unhealthy</CardTitle>
-                      <PoorAirIcon className="h-8 w-8 text-red-500" />
+                      <PoorAirIcon className="h-8 w-8" />
                   </CardHeader>
                   <CardContent>
                       <div className="text-2xl font-bold">101+</div>

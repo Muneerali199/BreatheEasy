@@ -17,8 +17,9 @@ const ForecastAirQualityInputSchema = z.object({
 export type ForecastAirQualityInput = z.infer<typeof ForecastAirQualityInputSchema>;
 
 const ForecastAirQualityOutputSchema = z.object({
-  forecast: z.string().describe('A forecast of the air quality for the specified location.'),
-  sparklineData: z.array(z.number()).describe('An array of numbers representing the air quality forecast data for a sparkline chart.'),
+  forecast: z.string().describe('A detailed 1-day air quality forecast, including primary pollutants and health recommendations.'),
+  currentAqi: z.number().describe('The current Air Quality Index (AQI) value for the location.'),
+  sparklineData: z.array(z.number()).describe('An array of 30 integer numbers representing the forecasted AQI for the next 30 days for a sparkline chart.'),
 });
 export type ForecastAirQualityOutput = z.infer<typeof ForecastAirQualityOutputSchema>;
 
@@ -30,7 +31,11 @@ const forecastAirQualityPrompt = ai.definePrompt({
   name: 'forecastAirQualityPrompt',
   input: {schema: ForecastAirQualityInputSchema},
   output: {schema: ForecastAirQualityOutputSchema},
-  prompt: `You are an air quality forecasting expert. Provide a forecast of the air quality for the specified location. Also provide sample data that can be rendered with a sparkline.
+  prompt: `You are an expert meteorologist and air quality scientist. Based on the provided location, generate a detailed 1-day air quality forecast and a 30-day AQI forecast.
+
+The 1-day forecast should include the primary pollutants, the current AQI (Air Quality Index) value, and health recommendations.
+
+The 30-day AQI forecast should be an array of 30 integers (from 0 to 300) for a sparkline chart.
 
 Location: {{{location}}}
 `,
@@ -43,16 +48,7 @@ const forecastAirQualityFlow = ai.defineFlow(
     outputSchema: ForecastAirQualityOutputSchema,
   },
   async input => {
-    // Here, you would integrate with a real air quality forecasting model.
-    // This is a placeholder implementation.
     const {output} = await forecastAirQualityPrompt(input);
-
-    // Generate some dummy sparkline data
-    const sparklineData = Array.from({length: 30}, () => Math.random() * 100);
-
-    return {
-      forecast: output?.forecast ?? 'No forecast available.',
-      sparklineData: sparklineData,
-    };
+    return output!;
   }
 );
