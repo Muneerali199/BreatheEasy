@@ -62,7 +62,7 @@ const getGroundSensorData = ai.defineTool(
       throw new Error("Could not connect to the data service. Please contact support.");
     }
 
-    const url = `https://api.airvisual.com/v2/city?city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}&country=${encodeURIComponent(country)}&key=${apiKey}`;
+    const url = `http://api.airvisual.com/v2/city?city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}&country=${encodeURIComponent(country)}&key=${apiKey}`;
 
     try {
       const response = await fetch(url);
