@@ -1,15 +1,14 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { forecastAirQuality } from '@/ai/flows/air-quality-forecast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Check, ChevronsUpDown } from 'lucide-react';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { Area, AreaChart } from "recharts"
 import GoodAirIcon from '@/components/icons/GoodAirIcon';
@@ -19,12 +18,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useForecast } from '@/context/ForecastContext';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { getSupportedLocations } from './actions';
+import { cn } from '@/lib/utils';
 
 
 const formSchema = z.object({
-  city: z.string().min(2, "City must be at least 2 characters."),
-  state: z.string().min(2, "State must be at least 2 characters."),
-  country: z.string().min(2, "Country must be at least 2 characters."),
+  location: z.string({ required_error: "Please select a location." }).min(1, "Please select a location."),
 });
 type FormValues = z.infer<typeof formSchema>;
 
@@ -48,18 +49,38 @@ const getPollutantBadgeVariant = (aqi: number): "good" | "moderate" | "destructi
 export default function DashboardPage() {
   const { forecast, setForecast, isLoading, setIsLoading } = useForecast();
   const [error, setError] = useState<string | null>(null);
+  const [popoverOpen, setPopoverOpen] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: { city: "", state: "", country: "" },
+    defaultValues: { location: "" },
   });
+
+  const handleSearch = async (query: string) => {
+    const result = await getSupportedLocations(query);
+    setSuggestions(result);
+  }
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     setIsLoading(true);
     setError(null);
     setForecast(null);
+
+    const parts = data.location.split(',').map(p => p.trim());
+    if (parts.length < 2) {
+      setError("Invalid location format. Please select a valid location from the list.");
+      setIsLoading(false);
+      return;
+    }
+
+    // Heuristic to parse: New York, NY, USA -> 3 parts. London, UK -> 2 parts.
+    const city = parts[0];
+    const country = parts[parts.length - 1];
+    const state = parts.length > 2 ? parts[1] : city; // If no state, use city.
+
     try {
-      const result = await forecastAirQuality(data);
+      const result = await forecastAirQuality({ city, state, country });
       setForecast(result);
     } catch (e) {
       if (e instanceof Error) {
@@ -93,52 +114,71 @@ export default function DashboardPage() {
       <Card className="shadow-lg rounded-xl">
         <CardHeader>
           <CardTitle className="font-headline">Location Forecast</CardTitle>
-          <CardDescription>Enter a city, state, and country to get its air quality forecast.</CardDescription>
+          <CardDescription>Enter a location to get its air quality forecast.</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <FormField
-                  control={form.control}
-                  name="city"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>City</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., San Francisco" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="state"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>State</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., CA" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="country"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Country</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., USA" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="location"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Location</FormLabel>
+                    <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            className={cn(
+                              "w-full justify-between",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value || "Select a location..."}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                        <Command>
+                          <CommandInput
+                            placeholder="Search for a location..."
+                            onValueChange={handleSearch}
+                          />
+                          <CommandList>
+                            <CommandEmpty>No location found.</CommandEmpty>
+                            <CommandGroup>
+                              {suggestions.map((suggestion) => (
+                                <CommandItem
+                                  value={suggestion}
+                                  key={suggestion}
+                                  onSelect={() => {
+                                    form.setValue("location", suggestion);
+                                    setPopoverOpen(false);
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      suggestion === field.value
+                                        ? "opacity-100"
+                                        : "opacity-0"
+                                    )}
+                                  />
+                                  {suggestion}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <Button type="submit" disabled={isLoading} size="lg">
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Get Forecast
@@ -170,7 +210,7 @@ export default function DashboardPage() {
           <CardHeader>
             <div className="flex justify-between items-start">
               <div>
-                <CardTitle className="font-headline">Forecast for {`${form.getValues('city')}, ${form.getValues('state')}`}</CardTitle>
+                <CardTitle className="font-headline">Forecast for {form.getValues('location')}</CardTitle>
                 <CardDescription>
                   Current AQI: <span className="font-bold">{forecast.currentAqi}</span> ({aqiLevel})
                 </CardDescription>
