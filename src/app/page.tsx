@@ -17,6 +17,7 @@ import ModerateAirIcon from '@/components/icons/ModerateAirIcon';
 import PoorAirIcon from '@/components/icons/PoorAirIcon';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 
 const formSchema = z.object({
@@ -200,6 +201,27 @@ export default function DashboardPage() {
                 </AreaChart>
               </ChartContainer>
             </div>
+            
+            {forecast.healthRecommendations && (
+                <div>
+                    <h3 className="text-lg font-semibold mb-2">Health Recommendations</h3>
+                    <Accordion type="single" collapsible className="w-full" defaultValue="general">
+                        <AccordionItem value="general">
+                            <AccordionTrigger>For the General Public</AccordionTrigger>
+                            <AccordionContent>
+                                {forecast.healthRecommendations.generalPublic}
+                            </AccordionContent>
+                        </AccordionItem>
+                        <AccordionItem value="sensitive">
+                            <AccordionTrigger>For Sensitive Groups</AccordionTrigger>
+                            <AccordionContent>
+                                {forecast.healthRecommendations.sensitiveGroups}
+                            </AccordionContent>
+                        </AccordionItem>
+                    </Accordion>
+                </div>
+            )}
+            
           </CardContent>
         </Card>
       )}

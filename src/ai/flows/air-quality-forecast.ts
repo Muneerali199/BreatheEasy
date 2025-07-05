@@ -58,6 +58,31 @@ const getGroundSensorData = ai.defineTool(
   }
 );
 
+// Mock Tool: Simulates fetching weather model data
+const getWeatherModelData = ai.defineTool(
+  {
+    name: 'getWeatherModelData',
+    description: 'Retrieves weather forecast data for a location, including wind speed, direction, and chance of precipitation, which influence air quality.',
+    inputSchema: z.object({ location: z.string() }),
+    outputSchema: z.object({
+      windSpeed: z.number().describe('Wind speed in km/h.'),
+      windDirection: z.string().describe('Wind direction (e.g., N, S, E, W, NE).'),
+      precipitationChance: z.number().describe('Percentage chance of precipitation.'),
+    }),
+  },
+  async ({ location }) => {
+    console.log(`[Tool] Fetching weather model data for ${location}`);
+    // Mock data generation
+    const seed = location.length;
+    const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+    return {
+      windSpeed: (seed * 1.2) % 30,
+      windDirection: directions[seed % directions.length],
+      precipitationChance: (seed * 5) % 100,
+    };
+  }
+);
+
 
 const ForecastAirQualityInputSchema = z.object({
   location: z.string().describe('The location to forecast air quality for.'),
@@ -75,6 +100,10 @@ const ForecastAirQualityOutputSchema = z.object({
   currentAqi: z.number().describe('The current overall Air Quality Index (AQI) value for the location. This should be calculated based on the pollutant levels.'),
   pollutants: z.array(PollutantSchema).describe('A list of primary pollutants, their specific AQI, and related recommendations.'),
   sparklineData: z.array(z.number()).describe('An array of 30 integer numbers representing the forecasted AQI for the next 30 days for a sparkline chart.'),
+  healthRecommendations: z.object({
+      generalPublic: z.string().describe('Health advice for the general public.'),
+      sensitiveGroups: z.string().describe('Specific health advice for sensitive groups like children, the elderly, and people with respiratory issues.'),
+  }).describe('Detailed health recommendations based on the forecast.'),
 });
 export type ForecastAirQualityOutput = z.infer<typeof ForecastAirQualityOutputSchema>;
 
@@ -86,20 +115,22 @@ const forecastAirQualityPrompt = ai.definePrompt({
   name: 'forecastAirQualityPrompt',
   input: {schema: ForecastAirQualityInputSchema},
   output: {schema: ForecastAirQualityOutputSchema},
-  tools: [getSatelliteData, getGroundSensorData],
+  tools: [getSatelliteData, getGroundSensorData, getWeatherModelData],
   prompt: `You are an expert meteorologist and air quality scientist. Your task is to generate a comprehensive air quality forecast for a given location.
 
 To do this, you MUST first use the available tools to gather data:
 1.  Call 'getSatelliteData' to get satellite-based observations.
 2.  Call 'getGroundSensorData' to get measurements from local sensors.
+3.  Call 'getWeatherModelData' to get the weather forecast, as wind and rain significantly impact air quality.
 
-Once you have the data from both tools, synthesize it to create your forecast.
+Once you have the data from all three tools, synthesize it to create your forecast.
 
 The forecast must include:
-- A detailed 1-day summary forecast and health recommendations.
+- A detailed 1-day summary forecast that explains how the weather (wind, rain) will affect air quality.
 - The overall current AQI for the location, calculated based on the available pollutant data.
 - A breakdown of individual pollutants (PM2.5, O3, NO2), their specific AQI values, and a brief recommendation for each.
 - A 30-day AQI forecast as an array of 30 integers (from 0 to 300) for a sparkline chart.
+- Detailed health recommendations: one for the general public and another specifically for sensitive groups (children, elderly, individuals with health conditions).
 
 Location: {{{location}}}
 `,
