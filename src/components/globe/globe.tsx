@@ -3,9 +3,42 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { useForecast } from '@/context/ForecastContext';
+
+// Helper function to create weighted random color based on AQI
+const getRandomColor = (aqi: number | undefined): THREE.Color => {
+    const colors = [new THREE.Color(0x81C784), new THREE.Color(0xFFD54F), new THREE.Color(0xEF5350)]; // Good, Moderate, Poor
+    if (aqi === undefined) {
+        // Default random distribution if no forecast is available
+        return colors[Math.floor(Math.random() * colors.length)];
+    }
+
+    let weights: number[];
+    if (aqi <= 50) { // Good
+        weights = [0.8, 0.15, 0.05]; // 80% green, 15% yellow, 5% red
+    } else if (aqi <= 100) { // Moderate
+        weights = [0.15, 0.7, 0.15]; // 15% green, 70% yellow, 15% red
+    } else { // Unhealthy
+        weights = [0.05, 0.15, 0.8]; // 5% green, 15% yellow, 80% red
+    }
+
+    const random = Math.random();
+    let cumulativeWeight = 0;
+
+    for (let i = 0; i < colors.length; i++) {
+        cumulativeWeight += weights[i];
+        if (random < cumulativeWeight) {
+            return colors[i];
+        }
+    }
+    return colors[0]; // Fallback
+}
+
 
 export default function Globe() {
   const mountRef = useRef<HTMLDivElement>(null);
+  const dataPointsRef = useRef<THREE.Group>(new THREE.Group());
+  const { forecast } = useForecast();
 
   useEffect(() => {
     if (!mountRef.current || typeof window === 'undefined') return;
@@ -52,17 +85,7 @@ export default function Globe() {
     const globe = new THREE.Mesh(globeGeometry, globeMaterial);
     scene.add(globe);
 
-    const dataPointGeometry = new THREE.SphereGeometry(0.015, 16, 16);
-    const colors = [new THREE.Color(0xA5D6A7), new THREE.Color(0xFFD54F), new THREE.Color(0xEF5350)];
-    for (let i = 0; i < 300; i++) {
-        const phi = Math.acos(-1 + (2 * i) / 300);
-        const theta = Math.sqrt(300 * Math.PI) * phi;
-        const color = colors[Math.floor(Math.random() * colors.length)];
-        const dataPointMaterial = new THREE.MeshBasicMaterial({ color });
-        const dataPoint = new THREE.Mesh(dataPointGeometry, dataPointMaterial);
-        dataPoint.position.setFromSphericalCoords(1.001, Math.random() * Math.PI, Math.random() * 2 * Math.PI);
-        globe.add(dataPoint);
-    }
+    globe.add(dataPointsRef.current);
     
     const ambientLight = new THREE.AmbientLight(0xffffff, 2.5);
     scene.add(ambientLight);
@@ -95,6 +118,27 @@ export default function Globe() {
       renderer.dispose();
     };
   }, []);
+
+  useEffect(() => {
+    const dataPoints = dataPointsRef.current;
+    if (!dataPoints) return;
+
+    while (dataPoints.children.length) {
+        dataPoints.remove(dataPoints.children[0]);
+    }
+    
+    const dataPointGeometry = new THREE.SphereGeometry(0.015, 16, 16);
+    const pointCount = forecast ? 500 : 300;
+
+    for (let i = 0; i < pointCount; i++) {
+        const color = getRandomColor(forecast?.currentAqi);
+        const dataPointMaterial = new THREE.MeshBasicMaterial({ color });
+        const dataPoint = new THREE.Mesh(dataPointGeometry, dataPointMaterial);
+        dataPoint.position.setFromSphericalCoords(1.001, Math.random() * Math.PI, Math.random() * 2 * Math.PI);
+        dataPoints.add(dataPoint);
+    }
+
+  }, [forecast]);
 
   return <div ref={mountRef} className="w-full h-full" data-ai-hint="earth map" />;
 }

@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
-import { forecastAirQuality, type ForecastAirQualityOutput } from '@/ai/flows/air-quality-forecast';
+import { forecastAirQuality } from '@/ai/flows/air-quality-forecast';
 import { Loader2 } from 'lucide-react';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { Area, AreaChart } from "recharts"
@@ -18,6 +18,7 @@ import PoorAirIcon from '@/components/icons/PoorAirIcon';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { useForecast } from '@/context/ForecastContext';
 
 
 const formSchema = z.object({
@@ -43,8 +44,7 @@ const getPollutantBadgeVariant = (aqi: number): "good" | "moderate" | "destructi
 };
 
 export default function DashboardPage() {
-  const [forecast, setForecast] = useState<ForecastAirQualityOutput | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const { forecast, setForecast, isLoading, setIsLoading } = useForecast();
   const [error, setError] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
