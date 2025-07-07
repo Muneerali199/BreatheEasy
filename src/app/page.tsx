@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -78,11 +78,13 @@ export default function DashboardPage() {
     defaultValues: { location: "" },
   });
 
-  const handleSearch = async (query: string) => {
-    if (!query) {
-        setSuggestions([]);
-        return;
+  useEffect(() => {
+    if (popoverOpen) {
+      handleSearch("");
     }
+  }, [popoverOpen]);
+
+  const handleSearch = async (query: string) => {
     const result = await getSupportedLocations(query);
     setSuggestions(result);
   }
