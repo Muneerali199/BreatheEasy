@@ -72,22 +72,39 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState(""); // For debounced search
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: { location: "" },
   });
 
+  // Debounced search for locations
   useEffect(() => {
-    if (popoverOpen) {
-      handleSearch("");
+    if (!popoverOpen) {
+      return;
     }
-  }, [popoverOpen]);
+    
+    const handleSearch = async (query: string) => {
+      const result = await getSupportedLocations(query);
+      setSuggestions(result);
+    }
+    
+    // Fetch initial suggestions when opening
+    if (searchQuery === "") {
+        handleSearch("");
+    }
 
-  const handleSearch = async (query: string) => {
-    const result = await getSupportedLocations(query);
-    setSuggestions(result);
-  }
+    // Use a timer to debounce the search query.
+    const timer = setTimeout(() => {
+      if (searchQuery) {
+        handleSearch(searchQuery);
+      }
+    }, 300); // 300ms delay
+
+    return () => clearTimeout(timer); // Cleanup the timer
+  }, [searchQuery, popoverOpen]);
+
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     setIsLoading(true);
@@ -97,19 +114,16 @@ export default function DashboardPage() {
     const parts = data.location.split(',').map(p => p.trim());
     let city: string, state: string, country: string;
 
-    if (parts.length === 3) {
+    if (parts.length >= 3) {
       city = parts[0];
       state = parts[1];
       country = parts[2];
-    } else if (parts.length === 2) {
-      city = parts[0];
-      state = parts[0]; // For countries without states, API can often handle city=state
-      country = parts[1];
     } else {
-      setError("Invalid location format. Please select a valid location from the list.");
-      setIsLoading(false);
-      return;
+        setError("Invalid location format. Please select a valid location from the list, which should include city, state, and country.");
+        setIsLoading(false);
+        return;
     }
+
 
     try {
       const result = await forecastAirQuality({ city, state, country });
@@ -171,7 +185,7 @@ export default function DashboardPage() {
                                           </PopoverTrigger>
                                           <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                                             <Command filter={() => 1}>
-                                              <CommandInput placeholder="Search for a location..." onValueChange={handleSearch} />
+                                              <CommandInput placeholder="Search for a location..." onValueChange={setSearchQuery} />
                                               <CommandList>
                                                 <CommandEmpty>No location found.</CommandEmpty>
                                                 <CommandGroup>
@@ -179,8 +193,8 @@ export default function DashboardPage() {
                                                     <CommandItem
                                                       value={suggestion}
                                                       key={suggestion}
-                                                      onSelect={(currentValue) => {
-                                                        field.onChange(currentValue);
+                                                      onSelect={() => {
+                                                        field.onChange(suggestion);
                                                         setPopoverOpen(false);
                                                       }}
                                                     >
