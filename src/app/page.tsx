@@ -177,7 +177,7 @@ export default function DashboardPage() {
                                                 <CommandGroup>
                                                   {suggestions.map((suggestion) => (
                                                     <CommandItem value={suggestion} key={suggestion} onSelect={() => {
-                                                      form.setValue("location", suggestion);
+                                                      field.onChange(suggestion);
                                                       setPopoverOpen(false);
                                                     }}>
                                                       <Check className={cn("mr-2 h-4 w-4", suggestion === field.value ? "opacity-100" : "opacity-0")} />
