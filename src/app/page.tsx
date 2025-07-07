@@ -103,7 +103,7 @@ export default function DashboardPage() {
       country = parts[2];
     } else if (parts.length === 2) {
       city = parts[0];
-      state = parts[0];
+      state = parts[0]; // For countries without states, API can often handle city=state
       country = parts[1];
     } else {
       setError("Invalid location format. Please select a valid location from the list.");
@@ -176,10 +176,14 @@ export default function DashboardPage() {
                                                 <CommandEmpty>No location found.</CommandEmpty>
                                                 <CommandGroup>
                                                   {suggestions.map((suggestion) => (
-                                                    <CommandItem value={suggestion} key={suggestion} onSelect={() => {
-                                                      field.onChange(suggestion);
-                                                      setPopoverOpen(false);
-                                                    }}>
+                                                    <CommandItem
+                                                      value={suggestion}
+                                                      key={suggestion}
+                                                      onSelect={(currentValue) => {
+                                                        field.onChange(currentValue);
+                                                        setPopoverOpen(false);
+                                                      }}
+                                                    >
                                                       <Check className={cn("mr-2 h-4 w-4", suggestion === field.value ? "opacity-100" : "opacity-0")} />
                                                       {suggestion}
                                                     </CommandItem>
