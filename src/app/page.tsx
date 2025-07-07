@@ -194,7 +194,7 @@ export default function DashboardPage() {
                                                       value={suggestion}
                                                       key={suggestion}
                                                       onSelect={(currentValue) => {
-                                                        form.setValue("location", currentValue);
+                                                        field.onChange(currentValue);
                                                         setPopoverOpen(false);
                                                       }}
                                                       onMouseDown={(e) => {
