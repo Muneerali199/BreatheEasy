@@ -193,6 +193,9 @@ export default function DashboardPage() {
                                                     <CommandItem
                                                       value={suggestion}
                                                       key={suggestion}
+                                                      onMouseDown={(e) => {
+                                                        e.preventDefault();
+                                                      }}
                                                       onSelect={(value) => {
                                                         field.onChange(value);
                                                         setPopoverOpen(false);
