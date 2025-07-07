@@ -193,11 +193,13 @@ export default function DashboardPage() {
                                                     <CommandItem
                                                       value={suggestion}
                                                       key={suggestion}
-                                                      onSelect={async (currentValue) => {
+                                                      onSelect={(currentValue) => {
                                                         form.setValue("location", currentValue);
                                                         setPopoverOpen(false);
-                                                        // Programmatically submit form
-                                                        await onSubmit(form.getValues());
+                                                      }}
+                                                      onMouseDown={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
                                                       }}
                                                     >
                                                       <Check className={cn("mr-2 h-4 w-4", suggestion === field.value ? "opacity-100" : "opacity-0")} />
