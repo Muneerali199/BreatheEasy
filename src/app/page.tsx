@@ -90,7 +90,7 @@ export default function DashboardPage() {
       setSuggestions(result);
     }
     
-    // Fetch initial suggestions when opening
+    // Fetch initial suggestions when opening, or if search is cleared
     if (searchQuery === "") {
         handleSearch("");
     }
@@ -193,8 +193,8 @@ export default function DashboardPage() {
                                                     <CommandItem
                                                       value={suggestion}
                                                       key={suggestion}
-                                                      onSelect={() => {
-                                                        field.onChange(suggestion);
+                                                      onSelect={(value) => {
+                                                        form.setValue("location", value);
                                                         setPopoverOpen(false);
                                                       }}
                                                     >
