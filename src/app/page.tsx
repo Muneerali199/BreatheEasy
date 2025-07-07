@@ -170,7 +170,7 @@ export default function DashboardPage() {
                                             </FormControl>
                                           </PopoverTrigger>
                                           <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                                            <Command>
+                                            <Command filter={() => 1}>
                                               <CommandInput placeholder="Search for a location..." onValueChange={handleSearch} />
                                               <CommandList>
                                                 <CommandEmpty>No location found.</CommandEmpty>
@@ -219,7 +219,10 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <p>{error}</p>
-            <Button onClick={() => setError(null)} variant="outline" className="mt-4">Try again</Button>
+            <Button onClick={() => {
+                setError(null);
+                form.reset();
+            }} variant="outline" className="mt-4">Try again</Button>
           </CardContent>
         </Card>
       )}
