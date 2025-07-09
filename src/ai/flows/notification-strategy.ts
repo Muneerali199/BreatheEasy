@@ -56,8 +56,27 @@ const notificationStrategyFlow = ai.defineFlow(
     inputSchema: NotificationStrategyInputSchema,
     outputSchema: NotificationStrategyOutputSchema,
   },
-  async input => {
-    const {output} = await prompt(input);
-    return output!;
+  async (input) => {
+    const maxRetries = 3;
+    let lastError: Error | undefined;
+
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        const { output } = await prompt(input);
+        return output!;
+      } catch (e: any) {
+        lastError = e;
+        if (e.message?.includes('503') || e.message?.includes('overloaded')) {
+          console.log(`Attempt ${attempt + 1} failed due to model overload. Retrying in ${attempt + 1}s...`);
+          await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+        } else {
+          // Not a retryable error, so throw immediately.
+          throw e;
+        }
+      }
+    }
+    // If all retries fail, throw a user-friendly error.
+    console.error("All retries failed for notificationStrategyFlow.", lastError);
+    throw new Error('The AI service is currently overloaded and unable to handle the request. Please try again later.');
   }
 );

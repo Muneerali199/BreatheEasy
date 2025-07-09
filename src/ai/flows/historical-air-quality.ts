@@ -105,18 +105,34 @@ const historicalAirQualityFlow = ai.defineFlow(
     outputSchema: HistoricalAirQualityOutputSchema,
   },
   async (input) => {
-    // In a real application, you would replace this mock call with a real API call.
     const historicalData = await getHistoricalData(input, input.dateRange);
+    
+    const maxRetries = 3;
+    let lastError: Error | undefined;
 
-    const { output } = await prompt({
-        ...input,
-        historicalData,
-    });
-
-    // The AI might subtly change the data, so we ensure the original data is returned for charting.
-    return {
-        summary: output!.summary,
-        chartData: historicalData,
-    };
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        const { output } = await prompt({
+          ...input,
+          historicalData,
+        });
+        
+        // The AI might subtly change the data, so we ensure the original data is returned for charting.
+        return {
+            summary: output!.summary,
+            chartData: historicalData,
+        };
+      } catch (e: any) {
+        lastError = e;
+        if (e.message?.includes('503') || e.message?.includes('overloaded')) {
+          console.log(`Attempt ${attempt + 1} failed due to model overload. Retrying in ${attempt + 1}s...`);
+          await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+        } else {
+          throw e;
+        }
+      }
+    }
+    console.error("All retries failed for historicalAirQualityFlow.", lastError);
+    throw new Error('The AI service is currently overloaded and unable to handle the request. Please try again later.');
   }
 );

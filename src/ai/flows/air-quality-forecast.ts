@@ -212,20 +212,33 @@ const forecastAirQualityFlow = ai.defineFlow(
     outputSchema: ForecastAirQualityOutputSchema,
   },
   async (input) => {
-    // Step 1: Manually call the critical real-world data tool. This acts as a gatekeeper.
     const groundData = await getGroundSensorData({
-        city: input.city,
-        state: input.state,
-        country: input.country,
+      city: input.city,
+      state: input.state,
+      country: input.country,
     });
-    // If getGroundSensorData throws an error, the flow stops here and the error propagates to the client.
 
-    // Step 2: If the real data is valid, proceed to call the AI prompt with it.
-    const {output} = await forecastAirQualityPrompt({
-        ...input,
-        groundData,
-    });
-    
-    return output!;
+    const maxRetries = 3;
+    let lastError: Error | undefined;
+
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        const { output } = await forecastAirQualityPrompt({
+          ...input,
+          groundData,
+        });
+        return output!;
+      } catch (e: any) {
+        lastError = e;
+        if (e.message?.includes('503') || e.message?.includes('overloaded')) {
+          console.log(`Attempt ${attempt + 1} failed due to model overload. Retrying in ${attempt + 1}s...`);
+          await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+        } else {
+          throw e;
+        }
+      }
+    }
+    console.error("All retries failed for forecastAirQualityFlow.", lastError);
+    throw new Error('The AI service is currently overloaded and unable to handle the request. Please try again later.');
   }
 );
