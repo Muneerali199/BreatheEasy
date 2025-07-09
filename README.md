@@ -129,7 +129,7 @@ Here's a high-level overview of the key directories. For a complete breakdown, p
 
 ## 🤝 Contributing
 
-Contributions are welcome! If you have ideas for new features or improvements, feel free to open an issue or submit a pull request.
+Contributions are welcome! We have a set of guidelines to help you get started. Please check out our [Contributing Guide](CONTRIBUTING.md) for more details on how to submit issues and make pull requests.
 
 ## 📄 License
 
