@@ -161,13 +161,13 @@ const PollutantSchema = z.object({
 });
 
 const ForecastAirQualityOutputSchema = z.object({
-  forecast: z.string().describe('A detailed 1-day air quality forecast summary, incorporating all data sources, and including health recommendations.'),
+  forecast: z.string().describe('A detailed 1-day air quality forecast summary, incorporating all data sources, and including health recommendations. This should be formatted in Markdown.'),
   currentAqi: z.number().describe('The current overall Air Quality Index (AQI) value for the location. This should be calculated based on the pollutant levels.'),
   pollutants: z.array(PollutantSchema).describe('A list of primary pollutants, their specific AQI, and related recommendations.'),
   sparklineData: z.array(z.number()).describe('An array of 30 integer numbers representing the forecasted AQI for the next 30 days for a sparkline chart.'),
   healthRecommendations: z.object({
-      generalPublic: z.string().describe('Health advice for the general public.'),
-      sensitiveGroups: z.string().describe('Specific health advice for sensitive groups like children, the elderly, and people with respiratory issues.'),
+      generalPublic: z.string().describe('Health advice for the general public, formatted as Markdown bullet points.'),
+      sensitiveGroups: z.string().describe('Specific health advice for sensitive groups like children, the elderly, and people with respiratory issues, formatted as Markdown bullet points.'),
   }).describe('Detailed health recommendations based on the forecast.'),
 });
 export type ForecastAirQualityOutput = z.infer<typeof ForecastAirQualityOutputSchema>;
@@ -192,14 +192,14 @@ Now, you MUST use the other available tools to gather supplemental data:
 1.  Call 'getSatelliteData' with just the city name to get satellite-based observations.
 2.  Call 'getWeatherModelData' with just the city name to get the weather forecast.
 
-Once you have the data from all sources (the provided ground data and the data from the tools), synthesize it to create your forecast.
+Once you have the data from all sources, synthesize it to create your forecast.
 
 The forecast must include:
-- A detailed 1-day summary forecast that explains how the weather (wind, rain) will affect air quality.
+- A detailed 1-day summary forecast. **Format this summary using Markdown**, using paragraphs and bold text to highlight key information like wind patterns and their effect on pollution.
 - The overall current AQI for the location, calculated based on the available pollutant data.
 - A breakdown of individual pollutants (PM2.5, O3, NO2), their specific AQI values, and a brief recommendation for each.
 - A 30-day AQI forecast as an array of 30 integers (from 0 to 300) for a sparkline chart.
-- Detailed health recommendations: one for the general public and another specifically for sensitive groups (children, elderly, individuals with health conditions).
+- Detailed health recommendations. **Format these recommendations using Markdown bullet points** to make them easy to read and act upon. Provide one set of recommendations for the general public and another for sensitive groups.
 
 Location: {{{city}}}, {{{state}}}, {{{country}}}
 `,

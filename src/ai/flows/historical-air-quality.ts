@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -29,7 +30,7 @@ const HistoricalDataPointSchema = z.object({
 });
 
 const HistoricalAirQualityOutputSchema = z.object({
-  summary: z.string().describe('An AI-generated analysis of the historical air quality trends, highlighting key patterns, highs, and lows.'),
+  summary: z.string().describe('An AI-generated analysis of the historical air quality trends, highlighting key patterns, highs, and lows. This should be formatted in Markdown.'),
   chartData: z.array(HistoricalDataPointSchema).describe('An array of historical data points for the date range, formatted for charting.'),
 });
 export type HistoricalAirQualityOutput = z.infer<typeof HistoricalAirQualityOutputSchema>;
@@ -91,7 +92,7 @@ Historical Data:
 - Date: {{{this.date}}}, AQI: {{{this.aqi}}}
 {{/each}}
 
-Based on this data, write a concise summary of the air quality trends. Identify any significant patterns, such as periods of high or low pollution, and provide a brief explanation for potential causes if possible (e.g., "a spike in mid-summer could be related to heat and stagnant air"). Do not invent data not present.
+Based on this data, write a concise summary of the air quality trends. Format the summary using Markdown. Use bold text to highlight key patterns, and use bullet points to list out significant periods of high or low pollution. Provide a brief explanation for potential causes if possible (e.g., "a spike in mid-summer could be related to heat and stagnant air"). Do not invent data not present.
 
 Your output must be a JSON object matching the specified schema. The 'chartData' should be the exact data provided to you.
 `,

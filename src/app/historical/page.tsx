@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -225,7 +226,7 @@ export default function HistoricalDataPage() {
           <CardContent className="space-y-6">
             <div>
               <h3 className="text-lg font-semibold mb-2">Trend Summary</h3>
-              <p className="text-foreground/80">{result.summary}</p>
+              <div className="prose prose-sm dark:prose-invert max-w-none text-foreground/80">{result.summary}</div>
             </div>
             <div>
               <h3 className="text-lg font-semibold mb-2">AQI Trend Chart</h3>

@@ -1,3 +1,4 @@
+
 // src/ai/flows/notification-strategy.ts
 'use server';
 /**
@@ -25,7 +26,7 @@ const NotificationStrategyOutputSchema = z.object({
   strategy: z
     .string()
     .describe(
-      'A notification strategy with specific thresholds based on the users location and risk factors. Include specific AQI thresholds for different pollutants and their health implications.'
+      'A notification strategy with specific thresholds based on the users location and risk factors. Include specific AQI thresholds for different pollutants and their health implications. This should be formatted in Markdown.'
     ),
 });
 export type NotificationStrategyOutput = z.infer<typeof NotificationStrategyOutputSchema>;
@@ -47,7 +48,7 @@ You will suggest a notification strategy for the user based on their location an
 Location: {{{location}}}
 Risk Factors: {{{riskFactors}}}
 
-Suggest a detailed notification strategy, including specific AQI thresholds for different pollutants and their health implications.`,
+Suggest a detailed notification strategy. Format your response using Markdown. Use headings, bold text, and bullet points to make the strategy clear, readable, and visually appealing. The strategy should include specific AQI thresholds for different pollutants and their health implications, broken down in a structured way.`,
 });
 
 const notificationStrategyFlow = ai.defineFlow(

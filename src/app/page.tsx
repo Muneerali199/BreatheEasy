@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -73,6 +73,7 @@ export default function DashboardPage() {
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const formRef = useRef<HTMLFormElement>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -121,6 +122,16 @@ export default function DashboardPage() {
     return () => clearTimeout(timer);
   }, [searchQuery, popoverOpen]);
 
+  const handleLocationSelect = (location: string) => {
+    form.setValue("location", location);
+    setPopoverOpen(false);
+    // Use a short timeout to allow the popover to close before submitting
+    setTimeout(() => {
+        formRef.current?.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+    }, 50);
+  };
+
+
   const chartData = forecast?.sparklineData.map((value, index) => ({ day: index, aqi: value })) || [];
   const chartConfig = {
     aqi: { label: "AQI", color: "hsl(var(--primary))" },
@@ -143,7 +154,7 @@ export default function DashboardPage() {
                         </CardHeader>
                         <CardContent>
                             <Form {...form}>
-                                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                                <form ref={formRef} onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                                   <FormField
                                     control={form.control}
                                     name="location"
@@ -173,11 +184,11 @@ export default function DashboardPage() {
                                                     <CommandItem
                                                       value={suggestion}
                                                       key={suggestion}
-                                                      onSelect={() => {
-                                                        form.setValue("location", suggestion);
-                                                        setPopoverOpen(false);
-                                                        form.handleSubmit(onSubmit)();
+                                                      onMouseDown={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
                                                       }}
+                                                      onSelect={() => handleLocationSelect(suggestion)}
                                                     >
                                                       <Check className={cn("mr-2 h-4 w-4", suggestion === field.value ? "opacity-100" : "opacity-0")} />
                                                       {suggestion}
@@ -215,6 +226,7 @@ export default function DashboardPage() {
                         <p>{error}</p>
                         <Button onClick={() => {
                             setError(null);
+                            setForecast(null);
                             form.reset();
                         }} variant="outline" className="mt-4">Try again</Button>
                     </CardContent>
@@ -246,7 +258,7 @@ export default function DashboardPage() {
                             <CardTitle>AI-Powered Forecast</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <p className="text-foreground/80">{forecast.forecast}</p>
+                            <div className="prose prose-sm dark:prose-invert max-w-none text-foreground/80">{forecast.forecast}</div>
                         </CardContent>
                     </Card>
                     <Card className="shadow-xl rounded-xl">
@@ -305,11 +317,15 @@ export default function DashboardPage() {
                             <Accordion type="single" collapsible className="w-full" defaultValue="general">
                                 <AccordionItem value="general">
                                     <AccordionTrigger>For the General Public</AccordionTrigger>
-                                    <AccordionContent>{forecast.healthRecommendations.generalPublic}</AccordionContent>
+                                    <AccordionContent>
+                                        <div className="prose prose-sm dark:prose-invert max-w-none text-foreground/80">{forecast.healthRecommendations.generalPublic}</div>
+                                    </AccordionContent>
                                 </AccordionItem>
                                 <AccordionItem value="sensitive">
                                     <AccordionTrigger>For Sensitive Groups</AccordionTrigger>
-                                    <AccordionContent>{forecast.healthRecommendations.sensitiveGroups}</AccordionContent>
+                                    <AccordionContent>
+                                        <div className="prose prose-sm dark:prose-invert max-w-none text-foreground/80">{forecast.healthRecommendations.sensitiveGroups}</div>
+                                    </AccordionContent>
                                 </AccordionItem>
                             </Accordion>
                         </CardContent>
