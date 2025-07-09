@@ -161,7 +161,6 @@ export default function DashboardPage() {
                             <CardDescription>Get real-time air quality forecasts powered by AI.</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            {/* Search Form */}
                             <Form {...form}>
                                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                                   <FormField
@@ -196,10 +195,7 @@ export default function DashboardPage() {
                                                       onSelect={(currentValue) => {
                                                         field.onChange(currentValue);
                                                         setPopoverOpen(false);
-                                                      }}
-                                                      onMouseDown={(e) => {
-                                                        e.preventDefault();
-                                                        e.stopPropagation();
+                                                        form.handleSubmit(onSubmit)();
                                                       }}
                                                     >
                                                       <Check className={cn("mr-2 h-4 w-4", suggestion === field.value ? "opacity-100" : "opacity-0")} />
@@ -215,10 +211,6 @@ export default function DashboardPage() {
                                       </FormItem>
                                     )}
                                   />
-                                  <Button type="submit" disabled={isLoading} size="lg" className="w-full">
-                                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                    Get Forecast
-                                  </Button>
                                 </form>
                             </Form>
                         </CardContent>
