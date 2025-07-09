@@ -18,8 +18,8 @@ const HistoricalAirQualityInputSchema = z.object({
   state: z.string().describe('The state or province.'),
   country: z.string().describe('The country.'),
   dateRange: z.object({
-    from: z.coerce.date(),
-    to: z.coerce.date(),
+    from: z.string().describe("The start date in ISO format."),
+    to: z.string().describe("The end date in ISO format."),
   }).describe('The date range for the historical data.'),
 });
 export type HistoricalAirQualityInput = z.infer<typeof HistoricalAirQualityInputSchema>;
@@ -30,7 +30,7 @@ const HistoricalDataPointSchema = z.object({
 });
 
 const HistoricalAirQualityOutputSchema = z.object({
-  summary: z.string().describe('An AI-generated analysis of the historical air quality trends, highlighting key patterns, highs, and lows. This should be formatted in Markdown.'),
+  summary: z.string().describe('An AI-generated analysis of the air quality trends, formatted in Markdown.'),
   chartData: z.array(HistoricalDataPointSchema).describe('An array of historical data points for the date range, formatted for charting.'),
 });
 export type HistoricalAirQualityOutput = z.infer<typeof HistoricalAirQualityOutputSchema>;
@@ -106,7 +106,12 @@ const historicalAirQualityFlow = ai.defineFlow(
     outputSchema: HistoricalAirQualityOutputSchema,
   },
   async (input) => {
-    const historicalData = await getHistoricalData(input, input.dateRange);
+    const parsedDateRange = {
+      from: new Date(input.dateRange.from),
+      to: new Date(input.dateRange.to),
+    };
+    
+    const historicalData = await getHistoricalData(input, parsedDateRange);
     
     const maxRetries = 3;
     let lastError: Error | undefined;
@@ -114,7 +119,10 @@ const historicalAirQualityFlow = ai.defineFlow(
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
         const { output } = await prompt({
-          ...input,
+          city: input.city,
+          state: input.state,
+          country: input.country,
+          dateRange: parsedDateRange,
           historicalData,
         });
         

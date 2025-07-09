@@ -62,8 +62,13 @@ export default function HistoricalDataPage() {
     setResult(null);
 
     const input = {
-      ...data,
-      dateRange: data.date
+      city: data.city,
+      state: data.state,
+      country: data.country,
+      dateRange: {
+        from: data.date.from.toISOString(),
+        to: data.date.to.toISOString(),
+      },
     };
 
     try {
@@ -226,7 +231,7 @@ export default function HistoricalDataPage() {
           <CardContent className="space-y-6">
             <div>
               <h3 className="text-lg font-semibold mb-2">Trend Summary</h3>
-              <div className="prose prose-sm dark:prose-invert max-w-none text-foreground/80">{result.summary}</div>
+              <div className="prose prose-sm dark:prose-invert max-w-none text-foreground/80" dangerouslySetInnerHTML={{ __html: result.summary }} />
             </div>
             <div>
               <h3 className="text-lg font-semibold mb-2">AQI Trend Chart</h3>
