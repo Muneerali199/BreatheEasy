@@ -193,8 +193,8 @@ export default function DashboardPage() {
                                                     <CommandItem
                                                       value={suggestion}
                                                       key={suggestion}
-                                                      onSelect={(currentValue) => {
-                                                        field.onChange(currentValue);
+                                                      onSelect={() => {
+                                                        field.onChange(suggestion);
                                                         setPopoverOpen(false);
                                                       }}
                                                       onMouseDown={(e) => {
