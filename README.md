@@ -1,21 +1,68 @@
+# BreatheEasy: Your AI-Powered Air Quality Companion
 
-# BreatheEasy: AI-Powered Air Quality Visualizer
+<p align="center">
+  <strong>A cutting-edge web application that provides real-time, hyperlocal air quality forecasts and analysis through a stunning, interactive interface.</strong>
+</p>
 
-BreatheEasy is a modern, web-based application designed to provide real-time and forecasted air quality information through an intuitive and visually rich interface. Leveraging the power of AI, it offers detailed insights, health recommendations, and historical data analysis to help users stay informed about the air they breathe.
+<p align="center">
+  <em>Stay ahead of air pollution, understand your environment, and protect your health with AI-driven insights.</em>
+</p>
+
+---
 
 <!-- You can add a screenshot or GIF of the app here! -->
-<!-- ![BreatheEasy App Screenshot](path/to/your/screenshot.png) -->
+<p align="center">
+  <img src="https://placehold.co/800x450.png" alt="BreatheEasy App Screenshot" data-ai-hint="dashboard weather app" />
+</p>
 
 ## ✨ Core Features
 
--   **Interactive 3D Globe & Dashboard**: The application opens with a stunning, interactive 3D globe that visualizes air quality data points across the world. After selecting a location, the view elegantly transitions to a detailed dashboard.
--   **Real-time AI Forecasts**: Get instant air quality forecasts for any supported location. This feature is powered by Genkit, which uses a multi-tool approach to synthesize data from real-world ground sensors (via the IQAir API), simulated satellite imagery, and weather models.
--   **AI-Powered Analysis**: The application uses AI to generate human-readable forecast summaries and health recommendations tailored to the current conditions for both the general public and sensitive groups.
--   **Detailed Data Visualization**: The dashboard includes a 30-day AQI forecast trend chart and a visual breakdown of primary pollutants, each with a color-coded progress bar that makes understanding the data effortless.
--   **Location Autocomplete**: A sleek, searchable input field provides instant location suggestions as you type, making it fast and user-friendly to find and select a location.
--   **Historical Data Analysis**: A dedicated page allows users to view past air quality trends for any location and date range with an interactive chart. It also provides an AI-generated summary of historical patterns.
--   **Personalized Notification Strategies**: Users can generate custom alert strategies based on their location and specific health risk factors, like asthma or age.
--   **Beautiful, Responsive UI**: A modern interface built with Next.js, ShadCN UI, and Tailwind CSS, complete with a beautiful, themeable dark mode toggle.
+BreatheEasy is packed with features designed to make complex environmental data accessible, understandable, and actionable.
+
+-   **Stunning Interactive 3D Globe**:
+    -   The app opens with a beautiful, interactive 3D globe, visualizing air quality data points across the world.
+    -   Explore the globe with zoom and rotation, set against a backdrop of a realistic starfield.
+    -   Get a high-level, color-coded overview of global air quality before diving into specifics.
+
+-   **Seamless One-Tap Forecasts**:
+    -   A powerful location search with instant autocomplete suggestions makes finding your city a breeze.
+    -   Select a location with a single tap or click to elegantly transition from the globe to a detailed dashboard. No extra steps required.
+
+-   **Comprehensive AI-Powered Dashboard**:
+    -   **Dynamic AQI Card**: The main header card instantly shows the current Air Quality Index (AQI) and dynamically changes color (green, yellow, red) for an immediate visual assessment.
+    -   **Intelligent Forecast Summary**: Genkit generates a detailed, human-readable forecast summary using Markdown for clarity, explaining what to expect and why.
+    -   **Visual Pollutant Breakdown**: Instead of just numbers, see a clear breakdown of primary pollutants (PM2.5, O3, NO2) with dedicated icons, progress bars, and color-coded AQI badges.
+    -   **30-Day Trend Chart**: An interactive area chart visualizes the forecasted AQI trend for the next 30 days, helping you plan ahead.
+
+-   **Personalized Health Recommendations**:
+    -   The AI provides actionable health advice tailored to the current conditions.
+    -   Separate, collapsible sections offer specific recommendations for both the **General Public** and **Sensitive Groups** (like children, the elderly, and those with respiratory issues).
+
+-   **Historical Data Analysis**:
+    -   Navigate to a dedicated page to explore past air quality trends for any location and custom date range.
+    -   The AI analyzes the historical data to generate a summary of trends, patterns, and potential causes for fluctuations.
+
+-   **Custom Notification Strategies**:
+    -   Generate a personalized alert strategy based on your location and specific health risk factors (e.g., asthma, heart conditions).
+    -   The AI provides clear, structured advice on when to take precautions based on different AQI thresholds.
+
+-   **Modern, Responsive & Themeable UI**:
+    -   Built with Next.js, ShadCN UI, and Tailwind CSS for a beautiful and responsive experience on any device.
+    -   Includes a polished dark mode that can be toggled manually or set to follow your system's theme.
+
+## 🧠 How It Works: The AI Engine
+
+The intelligence behind BreatheEasy is powered by **Genkit**, which orchestrates a multi-tool approach to generate highly accurate and contextual forecasts.
+
+When you request a forecast, a Genkit flow is triggered that:
+
+1.  **Calls the IQAir API**: It fetches real-time, ground-level sensor data for the specified location. This provides the most accurate baseline for current conditions.
+2.  **Simulates Satellite Data**: A mock tool simulates retrieving satellite imagery analysis, considering factors like aerosol optical depth and cloud cover.
+3.  **Integrates Weather Models**: Another mock tool simulates fetching weather data like wind speed, wind direction, and precipitation, which are crucial for predicting how air quality will change.
+4.  **Synthesizes and Analyzes**: The Genkit flow feeds all this data into the Gemini model. The AI then synthesizes the information from all three sources to create a comprehensive forecast, a 30-day trendline, and detailed health recommendations.
+5.  **Handles Errors Gracefully**: The flow includes a built-in retry mechanism to handle temporary service overloads, ensuring a more resilient user experience.
+
+This multi-faceted approach allows BreatheEasy to provide a forecast that is more than just a single data point—it's a holistic analysis of the environmental conditions.
 
 ## 🛠️ Tech Stack
 
