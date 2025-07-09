@@ -118,7 +118,7 @@ The application will be available at `http://localhost:9002`.
 
 ## 📂 Project Structure
 
-Here's a high-level overview of the key directories:
+Here's a high-level overview of the key directories. For a complete breakdown, please see the `STRUCTURE.md` file in the root of the project.
 
 -   `src/app/`: Contains all the pages of the application, following the Next.js App Router structure. The main dashboard, historical data page, and notifications page are located here.
 -   `src/ai/`: Home to all Genkit-related logic. This includes AI flows for forecasting (`air-quality-forecast.ts`), historical analysis (`historical-air-quality.ts`), and notification strategies (`notification-strategy.ts`).
