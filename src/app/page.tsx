@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -72,73 +72,54 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [searchQuery, setSearchQuery] = useState(""); // For debounced search
+  const [searchQuery, setSearchQuery] = useState("");
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: { location: "" },
   });
 
-  // Debounced search for locations
-  useEffect(() => {
-    if (!popoverOpen) {
-      return;
-    }
-    
-    const handleSearch = async (query: string) => {
-      const result = await getSupportedLocations(query);
-      setSuggestions(result);
-    }
-    
-    // Fetch initial suggestions when opening, or if search is cleared
-    if (searchQuery === "") {
-        handleSearch("");
-    }
-
-    // Use a timer to debounce the search query.
-    const timer = setTimeout(() => {
-      if (searchQuery) {
-        handleSearch(searchQuery);
-      }
-    }, 300); // 300ms delay
-
-    return () => clearTimeout(timer); // Cleanup the timer
-  }, [searchQuery, popoverOpen]);
-
-
-  const onSubmit: SubmitHandler<FormValues> = async (data) => {
+  const onSubmit: SubmitHandler<FormValues> = useCallback(async (data) => {
     setIsLoading(true);
     setError(null);
     setForecast(null);
 
     const parts = data.location.split(',').map(p => p.trim());
-    let city: string, state: string, country: string;
+    const [city, state, country] = parts;
 
-    if (parts.length >= 3) {
-      city = parts[0];
-      state = parts[1];
-      country = parts[2];
-    } else {
-        setError("Invalid location format. Please select a valid location from the list, which should include city, state, and country.");
+    if (parts.length < 3) {
+        setError("Invalid location format. Please select a valid location from the list.");
         setIsLoading(false);
         return;
     }
-
 
     try {
       const result = await forecastAirQuality({ city, state, country });
       setForecast(result);
     } catch (e) {
-      if (e instanceof Error) {
-        setError(e.message);
-      } else {
-        setError("An unknown error occurred while fetching the forecast.");
-      }
-      console.error(e);
+      setError(e instanceof Error ? e.message : "An unknown error occurred.");
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [setForecast, setIsLoading]);
+
+  useEffect(() => {
+    if (!popoverOpen) {
+      setSuggestions([]);
+      return;
+    }
+
+    const fetchSuggestions = async () => {
+      const result = await getSupportedLocations(searchQuery);
+      setSuggestions(result);
+    };
+
+    const timer = setTimeout(() => {
+      fetchSuggestions();
+    }, 150); // Debounce API calls
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, popoverOpen]);
 
   const chartData = forecast?.sparklineData.map((value, index) => ({ day: index, aqi: value })) || [];
   const chartConfig = {
@@ -148,13 +129,13 @@ export default function DashboardPage() {
   const { level: aqiLevel, Icon: AqiIcon, color: aqiColor, bgColor: aqiBgColor } = getAqiInfo(forecast?.currentAqi);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] w-full space-y-8">
-        {!forecast && !isLoading && (
-            <div className="w-full flex flex-col lg:flex-row items-center justify-center gap-8">
-                <div className="w-full lg:w-1/2 flex items-center justify-center h-[400px] lg:h-[600px]">
+    <div className="w-full">
+        {!forecast && !isLoading && !error && (
+             <div className="relative w-full h-[calc(100vh-8rem)] flex items-center justify-center p-4">
+                <div className="absolute inset-0 opacity-50">
                     <Globe />
                 </div>
-                <div className="w-full lg:w-1/2 max-w-md">
+                <div className="relative z-10 w-full max-w-md">
                      <Card className="shadow-2xl rounded-xl border-2">
                         <CardHeader>
                             <CardTitle className="text-3xl">BreatheEasy</CardTitle>
@@ -184,7 +165,7 @@ export default function DashboardPage() {
                                           </PopoverTrigger>
                                           <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                                             <Command filter={() => 1}>
-                                              <CommandInput placeholder="Search for a location..." onValueChange={setSearchQuery} />
+                                              <CommandInput placeholder="Search for a location..." value={searchQuery} onValueChange={setSearchQuery} />
                                               <CommandList>
                                                 <CommandEmpty>No location found.</CommandEmpty>
                                                 <CommandGroup>
@@ -192,8 +173,8 @@ export default function DashboardPage() {
                                                     <CommandItem
                                                       value={suggestion}
                                                       key={suggestion}
-                                                      onSelect={(currentValue) => {
-                                                        field.onChange(currentValue);
+                                                      onSelect={() => {
+                                                        form.setValue("location", suggestion);
                                                         setPopoverOpen(false);
                                                         form.handleSubmit(onSubmit)();
                                                       }}
@@ -219,31 +200,31 @@ export default function DashboardPage() {
             </div>
         )}
 
-      {isLoading && (
-        <div className="flex flex-col items-center justify-center p-8 space-y-4">
-          <Loader2 className="h-16 w-16 animate-spin text-primary" />
-          <p className="text-muted-foreground">Fetching live data and generating your forecast...</p>
+      {(isLoading || error) && (
+        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] p-8 space-y-4">
+            {isLoading && <>
+                <Loader2 className="h-16 w-16 animate-spin text-primary" />
+                <p className="text-muted-foreground">Fetching live data and generating your forecast...</p>
+            </>}
+            {error && (
+                <Card className="border-destructive bg-destructive/10 rounded-xl max-w-lg shadow-xl">
+                    <CardHeader>
+                        <CardTitle className="text-destructive">An Error Occurred</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p>{error}</p>
+                        <Button onClick={() => {
+                            setError(null);
+                            form.reset();
+                        }} variant="outline" className="mt-4">Try again</Button>
+                    </CardContent>
+                </Card>
+            )}
         </div>
       )}
 
-      {error && (
-        <Card className="border-destructive bg-destructive/10 rounded-xl max-w-lg shadow-xl">
-          <CardHeader>
-            <CardTitle className="text-destructive">An Error Occurred</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>{error}</p>
-            <Button onClick={() => {
-                setError(null);
-                form.reset();
-            }} variant="outline" className="mt-4">Try again</Button>
-          </CardContent>
-        </Card>
-      )}
-
       {forecast && (
-        <div className="w-full max-w-7xl space-y-6 animate-in fade-in-50 duration-500">
-            {/* Header Card */}
+        <div className="w-full max-w-7xl mx-auto space-y-6 animate-in fade-in-50 duration-500">
             <Card className={cn("shadow-xl rounded-xl", aqiBgColor)}>
                 <CardHeader>
                     <div className="flex justify-between items-start">
@@ -259,7 +240,6 @@ export default function DashboardPage() {
             </Card>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Left Column */}
                 <div className="lg:col-span-2 space-y-6">
                     <Card className="shadow-xl rounded-xl">
                         <CardHeader>
@@ -293,7 +273,6 @@ export default function DashboardPage() {
                     </Card>
                 </div>
 
-                {/* Right Column */}
                 <div className="lg:col-span-1 space-y-6">
                     <Card className="shadow-xl rounded-xl">
                         <CardHeader>
