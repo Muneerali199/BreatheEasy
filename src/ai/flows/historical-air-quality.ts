@@ -18,8 +18,8 @@ const HistoricalAirQualityInputSchema = z.object({
   state: z.string().describe('The state or province.'),
   country: z.string().describe('The country.'),
   dateRange: z.object({
-    from: z.date(),
-    to: z.date(),
+    from: z.coerce.date(),
+    to: z.coerce.date(),
   }).describe('The date range for the historical data.'),
 });
 export type HistoricalAirQualityInput = z.infer<typeof HistoricalAirQualityInputSchema>;
