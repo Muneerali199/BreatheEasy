@@ -31,20 +31,20 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 const getAqiInfo = (aqi: number | undefined) => {
-    if (aqi === undefined) return { level: null, Icon: null, color: '' };
+    if (aqi === undefined) return { level: 'Unknown', Icon: null, color: '', bgColor: 'bg-card' };
     if (aqi <= 50) {
-        return { level: 'Good', Icon: GoodAirIcon, color: 'text-green-500' };
+        return { level: 'Good', Icon: GoodAirIcon, color: 'text-emerald-500', bgColor: 'bg-emerald-500/10' };
     }
     if (aqi <= 100) {
-        return { level: 'Moderate', Icon: ModerateAirIcon, color: 'text-yellow-500' };
+        return { level: 'Moderate', Icon: ModerateAirIcon, color: 'text-amber-500', bgColor: 'bg-amber-500/10' };
     }
-    return { level: 'Unhealthy', Icon: PoorAirIcon, color: 'text-red-500' };
+    return { level: 'Unhealthy', Icon: PoorAirIcon, color: 'text-red-500', bgColor: 'bg-red-500/10' };
 };
 
 const getPollutantInfo = (pollutantName: string, aqi: number) => {
     const info: { variant: "good" | "moderate" | "destructive", indicatorClassName: string, icon: React.ReactNode } = {
         variant: 'good',
-        indicatorClassName: 'bg-green-500',
+        indicatorClassName: 'bg-emerald-500',
         icon: <Mountain className="h-5 w-5 text-muted-foreground" />,
     };
 
@@ -53,7 +53,7 @@ const getPollutantInfo = (pollutantName: string, aqi: number) => {
         info.indicatorClassName = 'bg-red-500';
     } else if (aqi > 50) {
         info.variant = 'moderate';
-        info.indicatorClassName = 'bg-yellow-500';
+        info.indicatorClassName = 'bg-amber-500';
     }
 
     if (pollutantName.includes('PM2.5')) {
@@ -145,7 +145,7 @@ export default function DashboardPage() {
     aqi: { label: "AQI", color: "hsl(var(--primary))" },
   };
   
-  const { level: aqiLevel, Icon: AqiIcon } = getAqiInfo(forecast?.currentAqi);
+  const { level: aqiLevel, Icon: AqiIcon, color: aqiColor, bgColor: aqiBgColor } = getAqiInfo(forecast?.currentAqi);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] w-full space-y-8">
@@ -235,7 +235,7 @@ export default function DashboardPage() {
       )}
 
       {error && (
-        <Card className="border-destructive bg-destructive/10 rounded-xl max-w-lg">
+        <Card className="border-destructive bg-destructive/10 rounded-xl max-w-lg shadow-xl">
           <CardHeader>
             <CardTitle className="text-destructive">An Error Occurred</CardTitle>
           </CardHeader>
@@ -252,13 +252,13 @@ export default function DashboardPage() {
       {forecast && (
         <div className="w-full max-w-7xl space-y-6 animate-in fade-in-50 duration-500">
             {/* Header Card */}
-            <Card className="shadow-lg rounded-xl">
+            <Card className={cn("shadow-xl rounded-xl", aqiBgColor)}>
                 <CardHeader>
                     <div className="flex justify-between items-start">
                         <div>
                             <CardTitle>Forecast for {form.getValues('location')}</CardTitle>
                             <CardDescription>
-                            Current AQI: <span className="font-bold">{forecast.currentAqi}</span> ({aqiLevel})
+                            Current AQI: <span className={cn("font-bold", aqiColor)}>{forecast.currentAqi}</span> ({aqiLevel})
                             </CardDescription>
                         </div>
                         {AqiIcon && <AqiIcon className="h-12 w-12" />}
@@ -269,7 +269,7 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Left Column */}
                 <div className="lg:col-span-2 space-y-6">
-                    <Card className="shadow-lg rounded-xl">
+                    <Card className="shadow-xl rounded-xl">
                         <CardHeader>
                             <CardTitle>AI-Powered Forecast</CardTitle>
                         </CardHeader>
@@ -277,7 +277,7 @@ export default function DashboardPage() {
                             <p className="text-foreground/80">{forecast.forecast}</p>
                         </CardContent>
                     </Card>
-                    <Card className="shadow-lg rounded-xl">
+                    <Card className="shadow-xl rounded-xl">
                         <CardHeader>
                             <CardTitle>30-Day AQI Trend</CardTitle>
                         </CardHeader>
@@ -303,7 +303,7 @@ export default function DashboardPage() {
 
                 {/* Right Column */}
                 <div className="lg:col-span-1 space-y-6">
-                    <Card className="shadow-lg rounded-xl">
+                    <Card className="shadow-xl rounded-xl">
                         <CardHeader>
                             <CardTitle>Primary Pollutants</CardTitle>
                         </CardHeader>
@@ -326,7 +326,7 @@ export default function DashboardPage() {
                             })}
                         </CardContent>
                     </Card>
-                    <Card className="shadow-lg rounded-xl">
+                    <Card className="shadow-xl rounded-xl">
                         <CardHeader>
                             <CardTitle>Health Recommendations</CardTitle>
                         </CardHeader>

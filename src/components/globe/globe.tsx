@@ -92,18 +92,34 @@ export default function Globe() {
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controls.enablePan = false;
-    controls.enableZoom = false; // Zoom can interfere with hover
+    controls.enableZoom = true;
+    controls.minDistance = 1.5;
+    controls.maxDistance = 5;
     controls.minPolarAngle = Math.PI / 4;
     controls.maxPolarAngle = Math.PI - Math.PI / 4;
     controls.autoRotate = true;
     controls.autoRotateSpeed = 0.2;
+
+    // --- Starfield ---
+    const starGeometry = new THREE.BufferGeometry();
+    const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.005 });
+    const starVertices = [];
+    for (let i = 0; i < 10000; i++) {
+        const x = (Math.random() - 0.5) * 2000;
+        const y = (Math.random() - 0.5) * 2000;
+        const z = -Math.random() * 2000;
+        starVertices.push(x, y, z);
+    }
+    starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
+    const stars = new THREE.Points(starGeometry, starMaterial);
+    scene.add(stars);
 
     // --- Globe Mesh ---
     const globeGeometry = new THREE.SphereGeometry(1, 64, 64);
     
     const textureLoader = new THREE.TextureLoader();
     const earthTexture = textureLoader.load(
-      'https://placehold.co/2048x1024.png',
+      'https://placehold.co/4096x2048.png',
       (texture) => {
         texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
       }
@@ -230,5 +246,5 @@ export default function Globe() {
     };
   }, []); // Empty dependency array ensures this runs only once on mount
 
-  return <div ref={mountRef} className="w-full h-full cursor-grab active:cursor-grabbing" data-ai-hint="earth map" />;
+  return <div ref={mountRef} className="w-full h-full cursor-grab active:cursor-grabbing" data-ai-hint="realistic earth map" />;
 }
